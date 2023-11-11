@@ -1,4 +1,5 @@
 import os
+import shutil
 
 # Establecer las variables de entorno
 os.environ['CUDA_HOME'] = '/usr/local/cuda-12.3'
@@ -15,22 +16,24 @@ os.environ['LIBRARY_PATH'] = os.path.join(os.environ['CUDNN_HOME'], 'lib64') + '
 # for var in ['CUDA_HOME', 'LD_LIBRARY_PATH', 'PATH', 'CUDNN_HOME', 'CPATH', 'LIBRARY_PATH']:
 #     print(f'{var}: {os.environ.get(var)}')
 
-import os
 
-media_path = os.path.join(os.getcwd(), 'media_temporal')
+base_media_path = os.path.join(os.getcwd(), 'media_temporal')
 # si no existe la carpeta media, la creamos
-if not os.path.exists(media_path):
-    os.makedirs(media_path)
+if not os.path.exists(base_media_path):
+    os.makedirs(base_media_path)
 
 # nombre del video a crear dentro de la carpeta media
 # path_video = os.path.join(media_path, 'trainingFinetuning.mp4')
 
-output_path = os.path.join(os.getcwd(), 'output')
+base_output_path = os.path.join(os.getcwd(), 'output')
 # si no existe la carpeta media, la creamos
-if not os.path.exists(output_path):
-    os.makedirs(output_path)
+if not os.path.exists(base_output_path):
+    os.makedirs(base_output_path)
 
-import os
+
+media_path = ""
+output_path = ""
+
 
 
 # export TF_ENABLE_ONEDNN_OPTS=0 #para desactivar el optimizador que puede dar problemas de accuracy
@@ -97,7 +100,7 @@ def transcribir_video_eng_spa(path_video, output_audio, nombre_transcripcion, no
 def transcribir_audio_con_whisper(output_audio, carpeta_transcripcion):
     comando = [
         "whisper", output_audio, "--task", "transcribe", 
-        "--model", "large", "--verbose", "False", 
+        "--model", "large-v3", "--verbose", "False", 
         "--output_dir", carpeta_transcripcion
     ]
     subprocess.run(comando)
@@ -106,7 +109,7 @@ def transcribir_audio_con_whisper(output_audio, carpeta_transcripcion):
 def transcribir_audio_con_whisper_spa(output_audio, carpeta_transcripcion_es):
     comando = [
         "whisper", output_audio, "--task", "transcribe", 
-        "--model", "large-v2", "--language", "Spanish", 
+        "--model", "large-v3", "--language", "Spanish", 
         "--verbose", "False", "--output_dir", carpeta_transcripcion_es
     ]
     subprocess.run(comando)
@@ -115,18 +118,31 @@ def transcribir_audio_con_whisper_spa(output_audio, carpeta_transcripcion_es):
 from pytube import YouTube, Playlist
 
 def identificar_y_obtener_urls_nombres(url):
+    global media_path
+    global output_path
+
     resultados = []
-    if "playlist" in url:
+    if "playlist?list=" in url:
         # Es una playlist
         playlist = Playlist(url)
+        nombre_carpeta = playlist.title
+
         for video_url in playlist.video_urls:
             video = YouTube(video_url)
             resultados.append((video.title, video_url))
     else:
         # Es un video individual
         video = YouTube(url)
+        nombre_carpeta = video.title
         resultados.append((video.title, url))
-    
+
+    media_path = os.path.join(base_media_path, nombre_carpeta)
+    if not os.path.exists(media_path):
+        os.makedirs(media_path)
+    output_path = os.path.join(base_output_path, nombre_carpeta)
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+
     return resultados
 
 if __name__ == "__main__":
@@ -137,8 +153,8 @@ if __name__ == "__main__":
         path_video = os.path.join(media_path, f"{nombre}.mp4")
         Download(path_video, video_url)
         output_audio = path_video.replace(".mp4", ".mp3")
-        carpeta_transcripcion = os.path.join(os.getcwd(), "audio_transcription")
-        carpeta_transcripcion_es = os.path.join(os.getcwd(), "audio_transcription_es")
+        carpeta_transcripcion = os.path.join(output_path, "audio_transcription")
+        carpeta_transcripcion_es = os.path.join(output_path, "audio_transcription_es")
         #coger solo nombre del video sin path
         nombre_video = os.path.basename(path_video)
         fichero_transcripcion = nombre_video.replace(".mp4", ".vtt")
@@ -161,3 +177,6 @@ if __name__ == "__main__":
 
         # !ffmpeg -y -i {path_video} -i {output_audio} -i {nombre_transcripcion} -i {nombre_transcripcion_es} -map 0:v -map 1:a -map 2 -map 3 -metadata:s:s:0 language=eng -metadata:s:s:1 language=spa -c:v copy -c:a aac -c:s mov_text {video_transcrito_path}
         transcribir_video_eng_spa(path_video, output_audio, nombre_transcripcion, nombre_transcripcion_es, video_transcrito_path)
+
+    # borramos la carpeta temporal
+    shutil.rmtree(base_media_path)
