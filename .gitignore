@@ -6,3 +6,4 @@ media_temporal/
 audio_transcription_es/
 output/
 .ssh/
+__pycache__/
