@@ -1,4 +1,4 @@
-# puertosocks = 5559
+# TODO: hacer que se puedan crear multiples tuneles inversos y proxies socks y que se puedan cerrar individualmente.
 
 import socket
 import socks  # Asegúrate de haber instalado PySocks
