@@ -54,7 +54,7 @@ except pkg_resources.DistributionNotFound:
     print('pytube instalado exitosamente.')
 
 
-from pytube import YouTube
+from pytube import YouTube, Playlist
 
 
 def Download(path, link):
@@ -115,7 +115,7 @@ def transcribir_audio_con_whisper_spa(output_audio, carpeta_transcripcion_es):
     subprocess.run(comando)
 
 
-from pytube import YouTube, Playlist
+# from pytube import YouTube, Playlist
 
 def identificar_y_obtener_urls_nombres(url):
     global media_path

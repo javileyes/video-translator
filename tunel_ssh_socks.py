@@ -2,7 +2,6 @@
 
 import socket
 import socks  # Asegúrate de haber instalado PySocks
-# import socks  # Asegúrate de haber instalado PySocks
 original_socket = socket.socket
 
 
