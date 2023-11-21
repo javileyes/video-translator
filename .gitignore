@@ -7,3 +7,4 @@ audio_transcription_es/
 output/
 .ssh/
 __pycache__/
+.env

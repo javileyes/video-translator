@@ -25,6 +25,19 @@ def obtener_informacion_ip():
         return f"Error al obtener la información de la IP: {e}"
     
 
+# ver si está activo el tunel ssh (proceso pm2 tunel-ssh activo)
+def esta_activo_tunel_ssh():
+    import subprocess
+    try:
+        # Ejecutar el comando 'pm2 list' y capturar la salida
+        result = subprocess.run(["pm2", "list"], capture_output=True, text=True, check=True)
+        output = result.stdout
+
+        # Verificar si el nombre del proceso está en la salida
+        return "tunel-ssh" in output
+    except subprocess.CalledProcessError:
+        # Manejar posibles errores al ejecutar el comando
+        return False    
 
 
 
