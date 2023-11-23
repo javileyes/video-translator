@@ -8,3 +8,4 @@ output/
 .ssh/
 __pycache__/
 .env
+audioLibro_sp/
