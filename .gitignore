@@ -9,3 +9,4 @@ output/
 __pycache__/
 .env
 audioLibro_sp/
+datasets/
