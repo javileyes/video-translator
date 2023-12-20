@@ -10,3 +10,9 @@ __pycache__/
 .env
 audioLibro_sp/
 datasets/
+pagina_web*/
+*.csv
+*.pkl
+*.pyc
+*.zip
+*.gz

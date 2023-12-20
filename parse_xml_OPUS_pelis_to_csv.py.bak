@@ -1,0 +1,94 @@
+# lo ejecutamos desde terminal para que no se quede la memoria llena
+import os
+import csv
+import xml.etree.ElementTree as ET
+import pickle
+import random
+
+# Load the cross-language dictionary from the pickle file
+# with open('resultPelis.pkl', 'rb') as file:
+with open('filterData.pkl', 'rb') as file:
+    cross_language_dict = pickle.load(file)
+
+# Define the paths
+xml_es_folder = './datasets/OpenSubtitles/OpenSubtitles_latest_raw_es/OpenSubtitles/raw/'
+xml_en_folder = './datasets/OpenSubtitles/OpenSubtitles_latest_raw_en/OpenSubtitles/raw/'
+csv_file_path = 'OpenSubtitlesDataset.csv'
+
+# Create the CSV file
+with open(csv_file_path, 'w', newline='', encoding='utf-8') as csv_file:
+    writer = csv.writer(csv_file, delimiter='~')
+    writer.writerow(['From Document', 'To Document', 'EN Section', 'SP Section'])
+
+    # Iterate through the cross-language dictionary
+    for entry in cross_language_dict:
+        from_doc = entry['fromDoc']
+        from_doc = os.path.splitext(from_doc)[0]
+        to_doc = entry['toDoc']
+        to_doc = os.path.splitext(to_doc)[0]
+
+        xml_en_file_path = os.path.join(xml_en_folder, from_doc)
+        xml_sp_file_path = os.path.join(xml_es_folder, to_doc)
+
+        try:
+            tree_en = ET.parse(xml_en_file_path)
+            root_en = tree_en.getroot()
+        except:
+            print(f"Error: {xml_en_file_path} not found")
+            continue
+
+        try:
+            tree_sp = ET.parse(xml_sp_file_path)
+            root_sp = tree_sp.getroot()
+        except:
+            print(f"Error: {xml_sp_file_path} not found")
+            continue
+
+        sections = entry['sections']
+
+        en_anterior = 0
+        sp_anterior = 0
+        while sections:
+            # section = sections.pop(0)
+            # en_from_section = section['EN']
+            # sp_from_section = section['SP']
+
+
+            # Determinar cuántos elementos avanzar, con un máximo del tamaño de la lista restante
+            advance_steps = min(random.randint(1, 1), len(sections))
+
+            # Avanzar en la lista y obtener la sección de destino
+            for _ in range(advance_steps):
+                if sections:
+                    section = sections.pop(0)
+
+            en_to_section = section['EN'] if sections else float('inf')
+            sp_to_section = section['SP'] if sections else float('inf')
+
+            en_text = ""
+            for elem in root_en.iter('s'):
+                if elem.text:
+                    try:
+                        id = int(float(elem.attrib['id']))
+                    except:
+                        print(f"Error: no se pudo convertir a int el id {id} que viene de {elem.attrib['id']}")
+                        continue
+                    if en_anterior <= id < en_to_section:
+                        en_text += elem.text + " "
+
+            sp_text = ""
+            for elem in root_sp.iter('s'):
+                if elem.text:
+                    try:
+                        id = int(float(elem.attrib['id']))
+                    except:
+                        print(f"Error: no se pudo convertir a int el id {id} que viene de {elem.attrib['id']}")
+                        continue
+                    if sp_anterior <= id < sp_to_section:
+                        sp_text += elem.text + " "
+
+            writer.writerow([from_doc, to_doc, en_text.strip(), sp_text.strip()])
+            en_anterior = en_to_section
+            sp_anterior = sp_to_section
+
+print(f"CSV file created: {csv_file_path}")
